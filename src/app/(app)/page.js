@@ -2,7 +2,7 @@ import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { FaClock, FaInfinity, FaSignal } from "react-icons/fa";
-import HeroBackground from "../../public/images/assets1.png";
+import HeroBackground from "../../../public/images/assets1.png";
 
 const benefitsData = [
   {
@@ -47,7 +47,6 @@ function BenefitCard({ iconName, title, description }) {
   );
 }
 
-
 export default function HomePage() {
   return (
     <main>
@@ -77,7 +76,6 @@ export default function HomePage() {
             Satu provider banyak untungnya!
           </h2>
 
-
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
             {benefitsData.map((benefit) => (
               <BenefitCard
@@ -88,7 +86,6 @@ export default function HomePage() {
               />
             ))}
           </div>
-
 
           <div className="text-center mt-12">
             <Link
