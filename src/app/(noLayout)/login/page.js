@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useAuth } from "@/store/AuthContext";
 import Link from "next/link";
 import {
   FaEnvelope,
@@ -27,7 +27,7 @@ const AuthPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-amber-400 flex items-center justify-center p-4">
       <div className="relative w-full max-w-5xl min-h-[700px] bg-white shadow-2xl rounded-lg overflow-hidden">
         <div className="absolute top-0 left-0 w-1/2 h-full p-8 transition-all duration-700 ease-in-out z-10">
           <RegisterForm />
@@ -155,7 +155,7 @@ function FormInput({
  * Form Login (Kanan)
  */
 function LoginForm() {
-  const router = useRouter();
+  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [password, setPassword] = useState("");
@@ -165,14 +165,12 @@ function LoginForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
-    setIsLoading(true);
+    setIsLoading(true); 
 
     try {
       const res = await fetch("/api/auth/login", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
 
@@ -180,25 +178,25 @@ function LoginForm() {
 
       if (!res.ok) {
         setError(data.message || "Login gagal!");
+        setIsLoading(false); 
         return;
       }
-      console.log("Login berhasil:", data);
 
-      router.push("/");
+
+      login(data.user, data.token);
     } catch (err) {
-      setError("Tidak dapat terhubung ke server.");
       console.error(err);
-    } finally {
-      setIsLoading(false); 
+      setError("Terjadi kesalahan jaringan.");
+      setIsLoading(false);
     }
   };
 
   return (
     <div className="flex flex-col justify-center h-full">
       <h2 className="text-3xl font-bold text-gray-800 mb-2 text-center">
-        Login Akun
+        Login
       </h2>
-      <p className="text-gray-500 mb-6 text-center">Selamat datang kembali!</p>
+      <p className="text-gray-500 mb-6 text-center">Selamat datang</p>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <FormInput
