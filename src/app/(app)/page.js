@@ -79,7 +79,6 @@ export default function HomePage() {
     <main>
       {/* --- HERO SECTION --- */}
       <section className="relative w-full h-[600px] md:h-[700px] overflow-hidden">
-        {/* Animasi Gambar Background (Zoom In halus) */}
         <motion.div
           className="absolute inset-0 w-full h-full"
           initial={{ scale: 1.1 }}

@@ -1,11 +1,9 @@
 import { NextResponse } from "next/server";
-import dbConnect from "@/lib/dbConnect"; 
-import User from "@/models/User";
+import prisma from "@/lib/prisma";
 import bcrypt from "bcrypt";
 
 export async function POST(request) {
   try {
-    await dbConnect(); 
     const { nama, email, password } = await request.json();
 
     if (!nama || !email || !password) {
@@ -15,30 +13,35 @@ export async function POST(request) {
       );
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10); 
-
-    const newUser = new User({
-      nama,
-      email,
-      password: hashedPassword, 
+    const existingUser = await prisma.user.findUnique({
+      where: { email: email },
     });
 
-    await newUser.save();
+    if (existingUser) {
+      return NextResponse.json(
+        { message: "Email sudah terdaftar" },
+        { status: 409 }
+      );
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const newUser = await prisma.user.create({
+      data: {
+        nama,
+        email,
+        password: hashedPassword,
+      },
+    });
 
     return NextResponse.json(
       { message: "User berhasil dibuat" },
       { status: 201 }
     );
   } catch (error) {
-    console.error(error);
-    if (error.code === 11000) {
-      return NextResponse.json(
-        { message: "Email sudah terdaftar" },
-        { status: 409 }
-      );
-    }
+    console.error("Register Error:", error);
     return NextResponse.json(
-      { message: "Terjadi kesalahan server", error: error.message },
+      { message: "Terjadi kesalahan server" },
       { status: 500 }
     );
   }

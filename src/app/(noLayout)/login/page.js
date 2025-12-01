@@ -12,8 +12,28 @@ import {
   FaEye,
   FaEyeSlash,
   FaSpinner,
+  FaGoogle,
+  FaGithub,
 } from "react-icons/fa";
 import { MdCancel } from "react-icons/md";
+
+function SocialButton({ icon: Icon, text, bgColor, textColor }) {
+  return (
+    <button
+      type="button"
+      className={`
+        w-full flex items-center justify-center gap-3 py-3 px-4 
+        rounded-xl font-semibold shadow-sm 
+        transition duration-150 border border-gray-300 cursor-pointer
+        ${bgColor} ${textColor}
+      `}
+      onClick={() => alert(`Logika ${text} akan ditambahkan!`)}
+    >
+      <Icon className="text-xl" />
+      <span className="text-sm">{text}</span>
+    </button>
+  );
+}
 
 const AuthPage = () => {
   const [isRegisterActive, setIsRegisterActive] = useState(false);
@@ -29,18 +49,23 @@ const AuthPage = () => {
   return (
     <div className="min-h-screen bg-amber-400 flex items-center justify-center p-4">
       <div className="relative w-full max-w-5xl min-h-[700px] bg-white shadow-2xl rounded-lg overflow-hidden">
-        <div className="absolute top-0 left-0 w-1/2 h-full p-8 transition-all duration-700 ease-in-out z-10">
+        <div
+          className={`absolute top-0 left-0 w-full md:w-1/2 h-full p-8 transition-all duration-700 ease-in-out z-10  ${
+            isRegisterActive ? "block" : "hidden md:block"
+          }`}
+        >
           <RegisterForm />
         </div>
 
-        <div className="absolute top-0 left-1/2 w-1/2 h-full p-8 transition-all duration-700 ease-in-out z-10">
+        <div className="absolute top-0 left-0 md:left-1/2 w-full md:w-1/2 h-full p-8 transition-all duration-700 ease-in-out z-10">
           <LoginForm />
         </div>
 
         <div
           className={`
+                        hidden md:flex // Sembunyikan di HP
                         absolute top-0 left-0 w-1/2 h-full bg-amber-500 text-white
-                        flex flex-col items-center justify-center p-12 text-center
+                        flex-col items-center justify-center p-12 text-center
                         transition-all duration-700 ease-in-out z-30
                         ${
                           isRegisterActive
@@ -143,7 +168,7 @@ function FormInput({
             onClick={onToggleShowPassword}
             className="text-gray-500 hover:text-gray-700 cursor-pointer"
           >
-            {showPassword ? <FaEyeSlash /> : <FaEye />}
+            {showPassword ? <FaEye /> : <FaEyeSlash />}
           </button>
         </div>
       )}
@@ -165,7 +190,7 @@ function LoginForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
-    setIsLoading(true); 
+    setIsLoading(true);
 
     try {
       const res = await fetch("/api/auth/login", {
@@ -178,11 +203,9 @@ function LoginForm() {
 
       if (!res.ok) {
         setError(data.message || "Login gagal!");
-        setIsLoading(false); 
+        setIsLoading(false);
         return;
       }
-
-
       login(data.user, data.token);
     } catch (err) {
       console.error(err);
@@ -197,6 +220,29 @@ function LoginForm() {
         Login
       </h2>
       <p className="text-gray-500 mb-6 text-center">Selamat datang</p>
+
+      <div className="space-y-4 mb-6">
+        <SocialButton
+          icon={FaGoogle}
+          cursor="pointer"
+          text="Lanjutkan dengan Google"
+          bgColor="bg-white"
+          textColor="text-gray-700"
+        />
+        <SocialButton
+          icon={FaGithub}
+          cursor="pointer"
+          text="Lanjutkan dengan GitHub"
+          bgColor="bg-gray-800"
+          textColor="text-white"
+        />
+      </div>
+
+      <div className="relative flex items-center justify-center mb-6">
+        <div className="grow border-t border-gray-300"></div>
+        <span className="shrink mx-4 text-gray-500 text-sm">ATAU</span>
+        <div className="grow border-t border-gray-300"></div>
+      </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <FormInput
@@ -227,9 +273,10 @@ function LoginForm() {
         </Link>
         <button
           type="submit"
-          className="w-full mt-4 py-2 px-4 rounded-full shadow-lg text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 cursor-pointer"
+          className="w-full mt-4 py-2 px-4 rounded-full shadow-lg text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 cursor-pointer flex justify-center items-center"
+          disabled={isLoading}
         >
-          Masuk
+          {isLoading ? <FaSpinner className="animate-spin text-lg" /> : "Login"}
         </button>
       </form>
     </div>
@@ -248,6 +295,7 @@ function RegisterForm() {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [showPass, setShowPass] = useState(false);
+  const [showConfirmPass, setShowConfirmPass] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   let confirmPassMatchState = null;
@@ -346,6 +394,7 @@ function RegisterForm() {
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
           isMatch={confirmPassMatchState}
+          showPassword={showConfirmPass}
         />
         <button
           type="submit"
