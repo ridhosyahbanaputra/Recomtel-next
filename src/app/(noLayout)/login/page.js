@@ -266,10 +266,11 @@ function LoginForm() {
         {error && <p className="text-xs text-red-600 text-center">{error}</p>}
 
         <Link
-          href="#"
+          href="/forgot-password"
+          target="_blank"
           className="text-sm text-amber-600 hover:text-amber-700 block text-right"
         >
-          Lupa Kata Sandi?
+          Lupa Password?
         </Link>
         <button
           type="submit"
