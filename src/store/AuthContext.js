@@ -5,42 +5,63 @@ import { useRouter } from "next/navigation";
 
 const AuthContext = createContext(null);
 
-export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
 
-  const [loading, setLoading] = useState(true);
+const getInitialUser = () => {
+
+  if (typeof window !== "undefined") {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      try {
+
+        return JSON.parse(storedUser);
+      } catch (error) {
+        console.error("Error parsing user from localStorage:", error);
+        localStorage.removeItem("user");
+        return null;
+      }
+    }
+  }
+  return null;
+};
+
+export const AuthProvider = ({ children }) => {
+
+  const [user, setUser] = useState(getInitialUser);
+  const [loading, setLoading] = useState(true); 
 
   const router = useRouter();
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      try {
-        // eslint-disable-next-line
-        setUser(JSON.parse(storedUser));
-      } catch (error) {
-        console.error(error);
-        localStorage.removeItem("user");
-      }
-    }
 
-    setLoading(false);
-  }, []);
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 10);
 
-  const login = (userData, token) => {
+    return () => clearTimeout(timer);
+  }, []); 
+
+
+  const login = (userData, session) => {
     try {
-      setUser(userData);
-      localStorage.setItem("user", JSON.stringify(userData));
-      localStorage.setItem("token", token);
-      window.location.href = "/";
+
+      const userObj = {
+        id: userData.id,
+        email: userData.email,
+        nama: userData.user_metadata?.nama || userData.nama || null,
+      };
+
+      setUser(userObj);
+      localStorage.setItem("user", JSON.stringify(userObj));
+      localStorage.setItem("token", session?.access_token || "");
+
+      router.push("/"); 
     } catch (error) {
-      alert("ERROR di Context: " + error.message);
-      console.error(error);
+      console.error("Login Error di Context:", error);
     }
   };
 
+
   const logout = () => {
-    console.log("Logout berhasil");
     setUser(null);
     localStorage.removeItem("user");
     localStorage.removeItem("token");
@@ -49,7 +70,7 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider value={{ user, login, logout, loading }}>
-      {children}
+      {loading ? <div>Loading Authentication...</div> : children}
     </AuthContext.Provider>
   );
 };

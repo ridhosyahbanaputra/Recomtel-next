@@ -1,6 +1,6 @@
 "use client";
 import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
 import {
   FaLock,
@@ -11,14 +11,14 @@ import {
 } from "react-icons/fa";
 import { MdCancel } from "react-icons/md";
 
-function FormInputValidated({
+const FormInputValidated = ({
   icon: Icon,
   placeholder,
   value,
   onChange,
   isMatch = null,
   isConfirmField = false,
-}) {
+}) => {
   const [showPass, setShowPass] = useState(false);
 
   const iconColorClass =
@@ -69,9 +69,9 @@ function FormInputValidated({
       )}
     </div>
   );
-}
+};
 
-export default function ResetPasswordPage() {
+function ResetPasswordContent() {
   const params = useSearchParams();
   const userId = params.get("userId");
 
@@ -206,5 +206,13 @@ export default function ResetPasswordPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={<div className="p-10 text-center">Loading...</div>}>
+      <ResetPasswordContent />;
+    </Suspense>
   );
 }

@@ -22,7 +22,7 @@ const Navbar = () => {
 
   const { user, logout, loading } = useAuth();
 
-  const userInitial = user?.name ? user.name.charAt(0).toUpperCase() : "U";
+  const userInitial = user?.nama ? user.nama.charAt(0).toUpperCase() : "U";
   const profileImageSrc = `https://placehold.co/400x400/f59e0b/ffffff?text=${userInitial}`;
 
   const navLinks = [
@@ -122,7 +122,7 @@ const Navbar = () => {
                           />
                         </div>
                         <h3 className="text-xl font-medium text-gray-800">
-                          Halo, {user.name}!
+                          Halo, {user.nama}!
                         </h3>
                         <Link
                           href="/profile"
@@ -245,7 +245,7 @@ const Navbar = () => {
                       <div className="overflow-hidden">
                         <p className="text-xs text-gray-500">Halo,</p>
                         <p className="font-bold text-gray-800 text-lg truncate">
-                          {user.name || user.email}
+                          {user.nama || user.email}
                         </p>
                       </div>
                     </div>

@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
-import bcrypt from "bcrypt";
+import { supabase } from "@/lib/supabase";
 
 export async function POST(request) {
   try {
@@ -13,33 +12,27 @@ export async function POST(request) {
       );
     }
 
-    const existingUser = await prisma.user.findUnique({
-      where: { email: email },
-    });
-
-    if (existingUser) {
-      return NextResponse.json(
-        { message: "Email sudah terdaftar" },
-        { status: 409 }
-      );
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const newUser = await prisma.user.create({
-      data: {
-        nama,
-        email,
-        password: hashedPassword,
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { nama }, // masuk ke user_metadata
       },
     });
 
+    if (error) {
+      return NextResponse.json({ message: error.message }, { status: 400 });
+    }
+
     return NextResponse.json(
-      { message: "User berhasil dibuat" },
+      {
+        message: "Register berhasil",
+        user: data.user,
+      },
       { status: 201 }
     );
-  } catch (error) {
-    console.error("Register Error:", error);
+  } catch (err) {
+    console.error("Register Error:", err);
     return NextResponse.json(
       { message: "Terjadi kesalahan server" },
       { status: 500 }
