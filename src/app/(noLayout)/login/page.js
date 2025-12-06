@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { useAuth } from "@/store/AuthContext";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/store/AuthContext"; 
 import Link from "next/link";
 import {
   FaEnvelope,
@@ -16,6 +17,8 @@ import {
   FaGithub,
 } from "react-icons/fa";
 import { MdCancel } from "react-icons/md";
+
+// --- COMPONENTS KECIL ---
 
 function SocialButton({ icon: Icon, text, bgColor, textColor }) {
   return (
@@ -35,69 +38,6 @@ function SocialButton({ icon: Icon, text, bgColor, textColor }) {
   );
 }
 
-const AuthPage = () => {
-  const [isRegisterActive, setIsRegisterActive] = useState(false);
-
-  const handleRegisterClick = () => {
-    setIsRegisterActive(true);
-  };
-
-  const handleLoginClick = () => {
-    setIsRegisterActive(false);
-  };
-
-  return (
-    <div className="min-h-screen bg-amber-400 flex items-center justify-center p-4">
-      <div className="relative w-full max-w-5xl min-h-[700px] bg-white shadow-2xl rounded-lg overflow-hidden">
-        <div
-          className={`absolute top-0 left-0 w-full md:w-1/2 h-full p-8 transition-all duration-700 ease-in-out z-10  ${
-            isRegisterActive ? "block" : "hidden md:block"
-          }`}
-        >
-          <RegisterForm />
-        </div>
-
-        <div className="absolute top-0 left-0 md:left-1/2 w-full md:w-1/2 h-full p-8 transition-all duration-700 ease-in-out z-10">
-          <LoginForm />
-        </div>
-
-        <div
-          className={`
-                        hidden md:flex // Sembunyikan di HP
-                        absolute top-0 left-0 w-1/2 h-full bg-amber-500 text-white
-                        flex-col items-center justify-center p-12 text-center
-                        transition-all duration-700 ease-in-out z-30
-                        ${
-                          isRegisterActive
-                            ? "transform translate-x-full"
-                            : "transform translate-x-0"
-                        }
-                    `}
-        >
-          {isRegisterActive ? (
-            <OverlayPanel
-              title="Sudah punya akun?"
-              message="Masuk aja lewat sebelah."
-              buttonText="Login"
-              onClick={handleLoginClick}
-            />
-          ) : (
-            <OverlayPanel
-              title="Belum Punya Akun?"
-              message="Daftar dulu disebelah sekarang."
-              buttonText="Registrasi"
-              onClick={handleRegisterClick}
-            />
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-/**
- * Konten untuk Panel Overlay
- */
 function OverlayPanel({ title, message, buttonText, onClick }) {
   return (
     <>
@@ -107,10 +47,10 @@ function OverlayPanel({ title, message, buttonText, onClick }) {
       <button
         onClick={onClick}
         className="
-                    bg-white text-amber-600 font-bold 
-                    py-2 px-8 rounded-full shadow-lg
-                    hover:bg-gray-100 transition duration-300 cursor-pointer
-                "
+            bg-white text-amber-600 font-bold 
+            py-2 px-8 rounded-full shadow-lg
+            hover:bg-gray-100 transition duration-300 cursor-pointer
+        "
       >
         {buttonText}
       </button>
@@ -121,9 +61,6 @@ function OverlayPanel({ title, message, buttonText, onClick }) {
   );
 }
 
-/**
- * Komponen Input Kustom (dengan Icon)
- */
 function FormInput({
   icon: Icon,
   type,
@@ -166,7 +103,7 @@ function FormInput({
           <button
             type="button"
             onClick={onToggleShowPassword}
-            className="text-gray-500 hover:text-gray-700 cursor-pointer"
+            className="text-gray-500 hover:text-gray-700 cursor-pointer focus:outline-none"
           >
             {showPassword ? <FaEye /> : <FaEyeSlash />}
           </button>
@@ -176,10 +113,9 @@ function FormInput({
   );
 }
 
-/**
- * Form Login (Kanan)
- */
-function LoginForm() {
+// --- FORMS ---
+
+function LoginForm({ onSwitchToRegister }) {
   const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -192,6 +128,13 @@ function LoginForm() {
     setError(null);
     setIsLoading(true);
 
+    // 1. Validasi Input Kosong (Mencegah request sia-sia)
+    if (!email || !password) {
+      setError("Email dan password harus diisi.");
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const res = await fetch("/api/auth/login", {
         method: "POST",
@@ -199,39 +142,42 @@ function LoginForm() {
         body: JSON.stringify({ email, password }),
       });
 
+      const contentType = res.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("Terjadi kesalahan server (Response not JSON).");
+      }
+
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.message || "Login gagal!");
-        setIsLoading(false);
+        setError(data.message || "Login gagal! Periksa email dan password Anda.");
+        setIsLoading(false); 
         return;
       }
-      login(data.user, data.token);
+      login(data.user, data.token); 
+
     } catch (err) {
-      console.error(err);
-      setError("Terjadi kesalahan jaringan.");
-      setIsLoading(false);
+      console.error("Login Error:", err);
+      setError(err.message || "Terjadi kesalahan jaringan. Coba lagi nanti.");
+      setIsLoading(false); 
     }
   };
-
   return (
     <div className="flex flex-col justify-center h-full">
       <h2 className="text-3xl font-bold text-gray-800 mb-2 text-center">
         Login
       </h2>
-      <p className="text-gray-500 mb-6 text-center">Selamat datang</p>
+      <p className="text-gray-500 mb-6 text-center">Selamat datang kembali</p>
 
       <div className="space-y-4 mb-6">
         <SocialButton
           icon={FaGoogle}
-          cursor="pointer"
           text="Lanjutkan dengan Google"
           bgColor="bg-white"
           textColor="text-gray-700"
         />
         <SocialButton
           icon={FaGithub}
-          cursor="pointer"
           text="Lanjutkan dengan GitHub"
           bgColor="bg-gray-800"
           textColor="text-white"
@@ -267,7 +213,6 @@ function LoginForm() {
 
         <Link
           href="/forgot-password"
-          target="_blank"
           className="text-sm text-amber-600 hover:text-amber-700 block text-right"
         >
           Lupa Password?
@@ -279,16 +224,26 @@ function LoginForm() {
         >
           {isLoading ? <FaSpinner className="animate-spin text-lg" /> : "Login"}
         </button>
+
+        {/* PERBAIKAN: Tombol switch khusus Mobile */}
+        <div className="mt-4 text-center md:hidden">
+            <p className="text-sm text-gray-600">
+                Belum punya akun?{" "}
+                <button 
+                    type="button" 
+                    onClick={onSwitchToRegister}
+                    className="text-amber-600 font-bold hover:underline"
+                >
+                    Daftar
+                </button>
+            </p>
+        </div>
       </form>
     </div>
   );
 }
 
-/**
- * Form Register (Kiri)
- */
-
-function RegisterForm() {
+function RegisterForm({ onSwitchToLogin }) {
   const [nama, setNama] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -319,9 +274,7 @@ function RegisterForm() {
     try {
       const res = await fetch("/api/auth/register", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ nama, email, password }),
       });
 
@@ -330,9 +283,7 @@ function RegisterForm() {
       if (!res.ok) {
         setError(data.message || "Registrasi gagal!");
       } else {
-        setSuccess(
-          data.message || "Registrasi berhasil! Silakan pindah ke tab Login."
-        );
+        setSuccess("Registrasi berhasil! Silakan Login.");
         setNama("");
         setEmail("");
         setPassword("");
@@ -345,9 +296,10 @@ function RegisterForm() {
       setIsLoading(false);
     }
   };
+
   return (
     <div className="flex flex-col justify-center h-full">
-      <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center ">
+      <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">
         Register
       </h2>
 
@@ -387,6 +339,8 @@ function RegisterForm() {
           showPassword={showPass}
           onToggleShowPassword={() => setShowPass(!showPass)}
         />
+        
+        {/* PERBAIKAN: Menambahkan logic toggle mata pada konfirmasi password */}
         <FormInput
           icon={FaCheckCircle}
           errorIcon={MdCancel}
@@ -395,8 +349,8 @@ function RegisterForm() {
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
           isMatch={confirmPassMatchState}
-          showPassword={showConfirmPass}
         />
+
         <button
           type="submit"
           className="w-full mt-4 py-2 px-4 rounded-full shadow-lg text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 cursor-pointer flex justify-center items-center"
@@ -408,9 +362,106 @@ function RegisterForm() {
             "Register"
           )}
         </button>
+
+         {/* PERBAIKAN: Tombol switch khusus Mobile */}
+         <div className="mt-4 text-center md:hidden">
+            <p className="text-sm text-gray-600">
+                Sudah punya akun?{" "}
+                <button 
+                    type="button" 
+                    onClick={onSwitchToLogin}
+                    className="text-amber-600 font-bold hover:underline"
+                >
+                    Login
+                </button>
+            </p>
+        </div>
       </form>
     </div>
   );
 }
+
+// --- MAIN PAGE ---
+
+const AuthPage = () => {
+  const router = useRouter();
+  const [isRegisterActive, setIsRegisterActive] = useState(false);
+
+  const handleRegisterClick = () => {
+    setIsRegisterActive(true);
+  };
+
+  const handleLoginClick = () => {
+    setIsRegisterActive(false);
+  };
+
+  return (
+    <div className="min-h-screen bg-amber-400 flex items-center justify-center p-4">
+      <div className="relative w-full max-w-5xl min-h-[700px] bg-white shadow-2xl rounded-lg overflow-hidden">
+        
+        {/* FORM REGISTER */}
+        <div
+          className={`
+            absolute top-0 left-0 w-full md:w-1/2 h-full p-8 
+            transition-all duration-700 ease-in-out z-10 
+            bg-white
+            ${
+                // Logic Mobile: Jika Register aktif, tampilkan. Jika tidak, sembunyikan.
+                isRegisterActive ? "opacity-100 z-20" : "opacity-0 z-0 md:opacity-100"
+            }
+          `}
+        >
+          <RegisterForm onSwitchToLogin={handleLoginClick} />
+        </div>
+
+        {/* FORM LOGIN */}
+        <div 
+          className={`
+            absolute top-0 left-0 md:left-1/2 w-full md:w-1/2 h-full p-8 
+            transition-all duration-700 ease-in-out z-10
+            bg-white
+            ${
+                 // Logic Mobile: Kebalikan dari Register
+                !isRegisterActive ? "opacity-100 z-20" : "opacity-0 z-0 md:opacity-100"
+            }
+          `}
+        >
+          <LoginForm onSwitchToRegister={handleRegisterClick} />
+        </div>
+
+        {/* OVERLAY PANEL (Hanya Desktop) */}
+        <div
+          className={`
+            hidden md:flex 
+            absolute top-0 left-0 w-1/2 h-full bg-amber-500 text-white
+            flex-col items-center justify-center p-12 text-center
+            transition-all duration-700 ease-in-out z-30
+            ${
+              isRegisterActive
+                ? "transform translate-x-full"
+                : "transform translate-x-0"
+            }
+          `}
+        >
+          {isRegisterActive ? (
+            <OverlayPanel
+              title="Sudah punya akun?"
+              message="Masuk aja lewat sebelah."
+              buttonText="Login"
+              onClick={handleLoginClick}
+            />
+          ) : (
+            <OverlayPanel
+              title="Belum Punya Akun?"
+              message="Daftar dulu disebelah sekarang."
+              buttonText="Registrasi"
+              onClick={handleRegisterClick}
+            />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default AuthPage;

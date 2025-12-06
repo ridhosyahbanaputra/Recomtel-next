@@ -1,5 +1,3 @@
-// src/app/[nama-rute]/loading.jsx
-
 import React from "react";
 import { ImSpinner2 } from "react-icons/im"; 
 
