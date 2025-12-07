@@ -3,8 +3,8 @@ import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/store/AuthContext";
 import { apiGet } from "@/lib/helper";
-import { TARGET_OFFERS } from "@/lib/data";  
-import { shuffleArray } from "@/lib/utils"; 
+import { TARGET_OFFERS } from "@/lib/data";
+import { shuffleArray } from "@/lib/utils";
 
 export default function RecommendationSection() {
   const { user, loading: authLoading } = useAuth();
@@ -22,42 +22,37 @@ export default function RecommendationSection() {
 
     async function fetchAndMatch() {
       try {
-        const endpoint = `/api/recommend/user/${user.id}`;
+        const endpoint = `/recommend/user/${user.id}`;
         const res = await apiGet(endpoint);
-        const recsFromApi = res.data || res.recommendations || [];
+
+        const topRecsRaw = res?.recommend?.slice(0, 3) || [];
+        const recommendedNames = new Set(topRecsRaw.map((r) => r.package_id));
 
         let tempArr = [...TARGET_OFFERS];
-        let matchIndex = -1;
+        let recommendedItems = [];
+        let remainingItems = [];
 
-        if (Array.isArray(recsFromApi) && recsFromApi.length > 0) {
-          const apiOfferNames = recsFromApi.map((r) =>
-            r.offer ? r.offer.toLowerCase() : ""
-          );
-
-          for (let i = 0; i < tempArr.length; i++) {
-            const item = tempArr[i];
-            const nameMatch = apiOfferNames.some((apiName) =>
-              item.name.toLowerCase().includes(apiName)
-            );
-            const keywordMatch = item.keywords.some((kw) =>
-              apiOfferNames.some((apiName) => apiName.includes(kw))
-            );
-
-            if (nameMatch || keywordMatch) {
-              matchIndex = i;
-              break;
-            }
+        tempArr.forEach((item) => {
+          if (recommendedNames.has(item.name)) {
+            recommendedItems.push({ ...item, isRecommended: true });
+          } else {
+            remainingItems.push(item);
           }
-        }
+        });
 
-        if (matchIndex !== -1) {
-          const matchedItem = { ...tempArr[matchIndex], isRecommended: true };
-          tempArr.splice(matchIndex, 1);
-          const shuffledRemaining = shuffleArray(tempArr);
-          setDisplayList([matchedItem, ...shuffledRemaining]);
-        } else {
-          setDisplayList(shuffleArray(tempArr));
-        }
+        const apiOrder = topRecsRaw.map((r) => r.package_id);
+        recommendedItems.sort((a, b) => {
+          return apiOrder.indexOf(a.name) - apiOrder.indexOf(b.name);
+        });
+
+        const rankedRecommendedItems = recommendedItems.map((item, index) => ({
+          ...item,
+          rank: index + 1, 
+        }));
+
+        const shuffledRemaining = shuffleArray(remainingItems);
+
+        setDisplayList([...rankedRecommendedItems, ...shuffledRemaining]);
       } catch (err) {
         console.error("Error Matching:", err);
         setDisplayList(shuffleArray(TARGET_OFFERS));
@@ -102,9 +97,10 @@ export default function RecommendationSection() {
               <span className="text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider bg-gray-100 text-gray-600">
                 {item.category}
               </span>
+
               {item.isRecommended && (
-                <span className="bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded-full animate-pulse shadow-sm">
-                  ★ Spesial Untukmu
+                <span className="bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-sm">
+                  Rekomendasi
                 </span>
               )}
             </div>
@@ -117,13 +113,19 @@ export default function RecommendationSection() {
               >
                 {item.name}
               </h3>
+
               {item.isRecommended && (
-                <span className="bg-amber-400 text-white text-[9px] font-extrabold px-2 py-0.5 rounded shadow-sm">
-                  AI PICK ⚡
+                <span className="bg-amber-400 text-white text-[10px] font-extrabold px-2 py-0.5 rounded shadow-sm">
+                  {`Top ${item.rank}`}
+                </span>
+              )}
+
+              {item.isRecommended && (
+                <span className="bg-amber-400 text-white text-[10px] font-extrabold px-2 py-0.5 rounded shadow-sm">
+                  {`AI PICK`}
                 </span>
               )}
             </div>
-
             <p className="text-gray-500 text-sm mb-6 line-clamp-3">
               {item.description}
             </p>
