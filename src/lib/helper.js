@@ -88,3 +88,7 @@ export async function apiPost(path, body) {
     throw error;
   }
 }
+
+export function getBaseUrl() {
+  return process.env.NEXT_PUBLIC_API_URL;
+}

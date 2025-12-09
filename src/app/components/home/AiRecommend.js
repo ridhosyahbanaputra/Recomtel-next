@@ -1,17 +1,68 @@
 "use client";
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useAuth } from "@/store/AuthContext";
 import { FiSend, FiImage, FiX } from "react-icons/fi";
-import { apiPost } from "@/lib/helper";
+import { apiPost, getBaseUrl } from "@/lib/helper";
+
+const TypewriterText = ({ text }) => {
+  const [displayedText, setDisplayedText] = useState("");
+  const wordsRef = useRef([]);
+  const indexRef = useRef(0);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setDisplayedText("");
+    wordsRef.current = text.split(" ");
+    indexRef.current = 0;
+
+    const intervalId = setInterval(() => {
+      const nextWord = wordsRef.current[indexRef.current];
+      if (!nextWord) {
+        clearInterval(intervalId);
+        return;
+      }
+
+      setDisplayedText((prev) =>
+        prev === "" ? nextWord : prev + " " + nextWord
+      );
+
+      indexRef.current++;
+
+      if (indexRef.current >= wordsRef.current.length) {
+        clearInterval(intervalId);
+      }
+    }, 150);
+
+    return () => clearInterval(intervalId);
+  }, [text]);
+
+  return (
+    <p
+      className="text-gray-700 mt-1 mb-4 leading-relaxed"
+      dangerouslySetInnerHTML={{
+        __html: displayedText.replace(/\*\*(.*?)\*\*/g, "<b>$1</b>"),
+      }}
+    />
+  );
+};
 
 export default function AiRecommend() {
   const [aiQuery, setAiQuery] = useState("");
   const [aiResponse, setAiResponse] = useState(null);
   const [isThinking, setIsThinking] = useState(false);
+  const [isGeneratingPdf] = useState(false);
 
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const fileInputRef = useRef(null);
+
+  const authContext = useAuth();
+  const userId = authContext?.user?.id;
+  const fallbackId =
+    userId && typeof userId === "string" && userId.trim() !== ""
+      ? userId
+      : "guest";
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -49,35 +100,34 @@ export default function AiRecommend() {
       if (imageFile) {
         const formData = new FormData();
         formData.append("image", imageFile);
-
-        data = await apiPost("/analyze_images", formData);
+        data = await apiPost("/api/analyze_images", formData);
       } else {
-        const jsonBody = { query: queryCopy };
-        data = await apiPost("/chat_query", jsonBody);
+        const jsonBody = { query: queryCopy, user_id: fallbackId };
+        data = await apiPost("/api/chat_query", jsonBody);
       }
 
       if (data && (data.error || data.detail)) {
         throw new Error(data.error || data.detail);
       }
 
+      const downloadUrlFromApi = data.download_url || null;
+
+      const rawAnswer = data.recommendation
+        ? `Rekomendasi Utama: ${data.recommendation.name}. Alasan: ${data.analysis.recommendationReason}`
+        : data.answer || "Permintaan berhasil diproses.";
+
       setAiResponse({
         analysis: data.analysis,
         recommendation: data.recommendation,
         error: null,
-        answer: data.recommendation
-          ? `Rekomendasi Utama: ${data.recommendation.name}. Alasan: ${data.analysis.recommendationReason}`
-          : data.answer || "Permintaan berhasil diproses.",
+        download_url: downloadUrlFromApi,
+        answer: rawAnswer,
       });
     } catch (error) {
-      let errorMessage =
-        error.message || "Terjadi kesalahan saat menghubungi Backend FastAPI.";
-      if (errorMessage.includes("Failed to fetch")) {
-        errorMessage =
-          "Koneksi gagal. Pastikan Server FastAPI berjalan (Port 8000).";
-      }
-
       setAiResponse({
-        error: errorMessage,
+        error:
+          error.message ||
+          "Terjadi kesalahan saat menghubungi Backend FastAPI.",
       });
     } finally {
       setIsThinking(false);
@@ -89,21 +139,11 @@ export default function AiRecommend() {
     <div className="mb-10 mt-5 flex flex-col items-center px-4">
       <form
         onSubmit={handleAiSubmit}
-        className={`
-          relative w-full max-w-3xl transition-all duration-300
-          ${aiResponse ? "mb-6" : "mb-10"}
-        `}
+        className={`relative w-full max-w-3xl transition-all duration-300 ${
+          aiResponse ? "mb-6" : "mb-10"
+        }`}
       >
-        <div
-          className="
-          flex items-center w-full pr-3 pl-6 py-3 
-          bg-gray-50 
-          rounded-full
-          shadow-[6px_6px_12px_#d0d0d0,-6px_-6px_12px_#ffffff]
-          focus-within:shadow-[3px_3px_8px_#d0d0d0,-3px_-3px_8px_#ffffff]
-          transition-all
-        "
-        >
+        <div className="flex items-center w-full pr-3 pl-6 py-3 bg-gray-50 rounded-full shadow-[6px_6px_12px_#d0d0d0,-6px_-6px_12px_#ffffff] focus-within:shadow-[3px_3px_8px_#d0d0d0,-3px_-3px_8px_#ffffff] transition-all">
           <input
             type="file"
             ref={fileInputRef}
@@ -114,14 +154,11 @@ export default function AiRecommend() {
           <button
             type="button"
             onClick={() => fileInputRef.current.click()}
-            className={`
-                mr-3 text-2xl transition hover:scale-110 
-                ${
-                  imageFile
-                    ? "text-green-500"
-                    : "text-gray-500 hover:text-amber-600"
-                }
-            `}
+            className={`mr-3 text-2xl transition hover:scale-110 ${
+              imageFile
+                ? "text-green-500"
+                : "text-gray-500 hover:text-amber-600"
+            }`}
             title="Upload Image Pemakaian Kuota"
           >
             <FiImage />
@@ -136,22 +173,17 @@ export default function AiRecommend() {
                 ? "Tuliskan fokus analisis (Opsional)"
                 : "Contoh: 'Paket apa yang cocok untuk nonton?'"
             }
-            className="
-              grow bg-transparent outline-none text-gray-800 text-base
-            "
+            className="grow bg-transparent outline-none text-gray-800 text-base"
           />
 
           <button
             type="submit"
             disabled={isThinking || (!aiQuery.trim() && !imageFile)}
-            className={`
-                p-2.5 rounded-full text-white transition transform active:scale-95 text-xl 
-                ${
-                  isThinking
-                    ? "bg-gray-400"
-                    : "bg-amber-600 hover:bg-amber-700 shadow-lg shadow-amber-500/50"
-                }
-            `}
+            className={`p-2.5 rounded-full text-white transition transform active:scale-95 text-xl ${
+              isThinking
+                ? "bg-gray-400"
+                : "bg-amber-600 hover:bg-amber-700 shadow-lg shadow-amber-500/50"
+            }`}
           >
             <FiSend />
           </button>
@@ -175,9 +207,7 @@ export default function AiRecommend() {
                 <FiX />
               </button>
             </div>
-            <p className="text-sm text-gray-600">
-              Image siap dianalisis: **{imageFile.name}**
-            </p>
+            <p className="text-sm text-gray-600">Image {imageFile.name}</p>
           </motion.div>
         )}
       </form>
@@ -189,7 +219,7 @@ export default function AiRecommend() {
           className="text-gray-600 flex items-center gap-2 mb-4"
         >
           <span className="w-4 h-4 border-2 border-amber-600 border-t-transparent rounded-full animate-spin"></span>
-          AI sedang menganalisis pemakaianmu...
+          Tunggu AI sedang berpikir...
         </motion.p>
       )}
 
@@ -205,23 +235,47 @@ export default function AiRecommend() {
             </p>
           ) : (
             <>
-              <p className="font-bold text-amber-700 mb-2">Recomtel AI:</p>
+              <p className="font-bold text-amber-700 mb-2 flex items-center gap-2">
+                Recomtel AI:
+              </p>
 
-              <p
-                className="text-gray-700 mt-1"
-                dangerouslySetInnerHTML={{
-                  __html: aiResponse.answer.replace(
-                    /\*\*(.*?)\*\*/g,
-                    "<b>$1</b>"
-                  ),
-                }}
-              />
+              <TypewriterText text={aiResponse.answer} />
+
+              {isGeneratingPdf && (
+                <p className="text-sm text-gray-600 italic mt-3">
+                  Baik, tunggu sebentar... laporan dalam proses dibuat 📄
+                </p>
+              )}
+
+              {aiResponse.download_url && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 1 }}
+                  className="mt-4 mb-6"
+                >
+                  <a
+                    href={`${getBaseUrl()}${aiResponse.download_url}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-amber-600 underline hover:text-amber-800 transition flex items-center gap-1"
+                  >
+                    Unduh Laporan PDF di sini
+                  </a>
+                </motion.div>
+              )}
 
               {aiResponse.analysis && (
-                <div className="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.5 }}
+                  className="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-200"
+                >
                   <h4 className="font-semibold text-sm text-gray-700 mb-2">
                     Detail Analisis Pemakaian:
                   </h4>
+
                   <ul className="text-sm space-y-1 text-gray-600">
                     {aiResponse.analysis.dominantCategory &&
                       aiResponse.analysis.dominantCategory !== "N/A" && (
@@ -243,16 +297,8 @@ export default function AiRecommend() {
                           <span>{aiResponse.analysis.totalUsageGB} GB</span>
                         </li>
                       )}
-
-                    {(!aiResponse.analysis.dominantCategory ||
-                      aiResponse.analysis.dominantCategory === "Other") &&
-                      !aiResponse.analysis.totalUsageGB && (
-                        <li className="text-xs italic text-gray-500">
-                          *Analisis kuota gagal dilakukan dari gambar.
-                        </li>
-                      )}
                   </ul>
-                </div>
+                </motion.div>
               )}
             </>
           )}

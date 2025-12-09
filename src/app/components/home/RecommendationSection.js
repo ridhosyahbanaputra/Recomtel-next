@@ -4,58 +4,166 @@ import { motion } from "framer-motion";
 import { useAuth } from "@/store/AuthContext";
 import { apiGet } from "@/lib/helper";
 import { TARGET_OFFERS } from "@/lib/data";
-import { shuffleArray } from "@/lib/utils";
+
+const fadeInUp = {
+  hidden: { opacity: 0, y: 40 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.8, ease: "easeOut" },
+  },
+};
+
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.5,
+    },
+  },
+};
+
+function PackageCard({ headerLines = [], mainLines, price }) {
+  return (
+    <motion.div
+      whileHover={{
+        y: -4,
+        boxShadow: "0 18px 35px rgba(15, 23, 42, 0.12)",
+      }}
+      transition={{ duration: 0.2 }}
+      className="shrink-0 w-[150px] sm:w-[170px] md:w-[190px] rounded-3xl border border-gray-200 bg-white px-4 pt-4 pb-4 flex flex-col justify-between relative overflow-hidden"
+    >
+      <div>
+        {headerLines.length > 0 && (
+          <div className="mb-2 space-y-0.5">
+            {headerLines.map((line, index) => (
+              <p
+                key={index}
+                className="text-[11px] font-semibold text-gray-800 leading-tight"
+              >
+                {line}
+              </p>
+            ))}
+          </div>
+        )}
+
+        {mainLines && mainLines.length > 0 && (
+          <p className="text-2xl font-extrabold text-gray-900 leading-tight">
+            {mainLines[0]}
+          </p>
+        )}
+
+        {mainLines &&
+          mainLines.slice(1).map((line, index) => (
+            <p key={index} className="mt-1 text-sm text-gray-800 leading-tight">
+              {line}
+            </p>
+          ))}
+      </div>
+
+      <div className="mt-3 border-t border-gray-200 pt-3">
+        <p className="text-[11px] sm:text-sm font-semibold mb-2 text-orange-500">
+          {price}
+        </p>
+        <button
+          type="button"
+          className="w-full rounded-full px-4 py-1.5 text-[11px] sm:text-xs font-semibold text-white transition-colors bg-rose-500 hover:bg-rose-600"
+        >
+          Beli
+        </button>
+      </div>
+    </motion.div>
+  );
+}
+
+function PackageSection({ title, cards, isRecommendedSection, rank }) {
+  return (
+    <section
+      className={`rounded-3xl border px-3 py-4 md:px-5 md:py-5 transition-all duration-500 ${
+        isRecommendedSection
+          ? "border-amber-400 bg-amber-50/50 order-first"
+          : "border-gray-200 bg-white"
+      }`}
+    >
+      <div className="flex flex-wrap items-center gap-2 mb-3 md:mb-4">
+        <h2 className="text-lg md:text-xl font-semibold text-gray-900">
+          {title}
+        </h2>
+
+        {isRecommendedSection && (
+          <>
+            <span className="bg-amber-500 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-sm">
+              TOP {rank}
+            </span>
+            <span className="bg-amber-500 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-sm">
+              AI PICK
+            </span>
+            <span className="bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-sm">
+              Rekomendasi AI
+            </span>
+          </>
+        )}
+      </div>
+
+      <div className="flex gap-3 md:gap-4 overflow-x-auto pb-1 scrollbar-hide">
+        {cards.map((card, index) => (
+          <PackageCard key={`${title}-${index}`} {...card} />
+        ))}
+      </div>
+    </section>
+  );
+}
 
 export default function RecommendationSection() {
   const { user, loading: authLoading } = useAuth();
-  const [displayList, setDisplayList] = useState([]);
+  const [sections, setSections] = useState(TARGET_OFFERS);
   const [isDataReady, setIsDataReady] = useState(false);
 
   useEffect(() => {
     if (authLoading) return;
 
     if (!user) {
-      setDisplayList(shuffleArray(TARGET_OFFERS));
+      setSections(TARGET_OFFERS);
       setIsDataReady(true);
       return;
     }
 
     async function fetchAndMatch() {
       try {
-        const endpoint = `/recommend/user/${user.id}`;
+        const endpoint = `/api/recommend/user/${user.id}`;
         const res = await apiGet(endpoint);
 
         const topRecsRaw = res?.recommend?.slice(0, 3) || [];
-        const recommendedNames = new Set(topRecsRaw.map((r) => r.package_id));
+        const topRecNames = topRecsRaw.map((r) => r.package_id.toLowerCase());
 
-        let tempArr = [...TARGET_OFFERS];
-        let recommendedItems = [];
-        let remainingItems = [];
+        if (topRecNames.length > 0) {
+          let recommendedSections = [];
+          let otherSections = [];
 
-        tempArr.forEach((item) => {
-          if (recommendedNames.has(item.name)) {
-            recommendedItems.push({ ...item, isRecommended: true });
-          } else {
-            remainingItems.push(item);
-          }
-        });
+          TARGET_OFFERS.forEach((section) => {
+            const sectionTitleLower = section.title.toLowerCase();
+            const rankIndex = topRecNames.indexOf(sectionTitleLower);
 
-        const apiOrder = topRecsRaw.map((r) => r.package_id);
-        recommendedItems.sort((a, b) => {
-          return apiOrder.indexOf(a.name) - apiOrder.indexOf(b.name);
-        });
+            if (rankIndex !== -1) {
+              recommendedSections.push({
+                ...section,
+                isRecommendedSection: true,
+                rank: rankIndex + 1,
+              });
+            } else {
+              otherSections.push(section);
+            }
+          });
 
-        const rankedRecommendedItems = recommendedItems.map((item, index) => ({
-          ...item,
-          rank: index + 1, 
-        }));
-
-        const shuffledRemaining = shuffleArray(remainingItems);
-
-        setDisplayList([...rankedRecommendedItems, ...shuffledRemaining]);
+          recommendedSections.sort((a, b) => a.rank - b.rank);
+          setSections([...recommendedSections, ...otherSections]);
+        } else {
+          setSections(TARGET_OFFERS);
+        }
       } catch (err) {
         console.error("Error Matching:", err);
-        setDisplayList(shuffleArray(TARGET_OFFERS));
+        setSections(TARGET_OFFERS);
       } finally {
         setIsDataReady(true);
       }
@@ -66,99 +174,32 @@ export default function RecommendationSection() {
 
   if (authLoading || !isDataReady) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-pulse">
+      <div className="space-y-6 md:space-y-8 animate-pulse">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="h-48 bg-gray-200 rounded-xl"></div>
+          <div key={i} className="h-48 bg-gray-200 rounded-3xl"></div>
         ))}
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      {displayList.map((item) => (
-        <motion.div
-          key={item.id}
-          layout
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
-          className={`
-            flex flex-col justify-between p-6 rounded-xl shadow-sm border transition-all duration-300 group
-            ${
-              item.isRecommended
-                ? "bg-amber-50 border-amber-400 ring-2 ring-amber-400 shadow-xl scale-[1.03] z-10 order-first"
-                : "bg-white border-gray-100 hover:shadow-lg"
-            }
-          `}
-        >
-          <div>
-            <div className="flex justify-between items-start mb-4">
-              <span className="text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider bg-gray-100 text-gray-600">
-                {item.category}
-              </span>
-
-              {item.isRecommended && (
-                <span className="bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-sm">
-                  Rekomendasi
-                </span>
-              )}
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2 mb-2">
-              <h3
-                className={`text-lg font-bold transition-colors ${
-                  item.isRecommended ? "text-amber-700" : "text-gray-800"
-                }`}
-              >
-                {item.name}
-              </h3>
-
-              {item.isRecommended && (
-                <span className="bg-amber-400 text-white text-[10px] font-extrabold px-2 py-0.5 rounded shadow-sm">
-                  {`Top ${item.rank}`}
-                </span>
-              )}
-
-              {item.isRecommended && (
-                <span className="bg-amber-400 text-white text-[10px] font-extrabold px-2 py-0.5 rounded shadow-sm">
-                  {`AI PICK`}
-                </span>
-              )}
-            </div>
-            <p className="text-gray-500 text-sm mb-6 line-clamp-3">
-              {item.description}
-            </p>
-          </div>
-
-          <div className="border-t border-gray-200 pt-4 flex items-center justify-between">
-            <div>
-              <p className="text-xs text-gray-400">Harga</p>
-              <p
-                className={`font-bold text-xl ${
-                  item.isRecommended ? "text-amber-700" : "text-amber-600"
-                }`}
-              >
-                {item.price > 0
-                  ? `Rp ${item.price.toLocaleString("id-ID")}`
-                  : "Cek Promo"}
-              </p>
-            </div>
-            <button
-              className={`
-                px-4 py-2 rounded-lg text-sm font-bold text-white transition transform active:scale-95
-                ${
-                  item.isRecommended
-                    ? "bg-amber-600 hover:bg-amber-700"
-                    : "bg-gray-900 hover:bg-gray-800"
-                }
-            `}
-            >
-              Beli
-            </button>
-          </div>
+    <motion.div
+      className="space-y-6 md:space-y-8"
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, margin: "-100px" }}
+      variants={staggerContainer}
+    >
+      {sections.map((section) => (
+        <motion.div key={section.title} variants={fadeInUp}>
+          <PackageSection
+            title={section.title}
+            cards={section.cards}
+            isRecommendedSection={section.isRecommendedSection}
+            rank={section.rank}
+          />
         </motion.div>
       ))}
-    </div>
+    </motion.div>
   );
 }

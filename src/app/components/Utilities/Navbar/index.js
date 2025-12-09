@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -12,13 +12,14 @@ import {
 } from "react-icons/fa";
 
 import { motion, AnimatePresence } from "framer-motion";
-
 import LogoImage from "../../../../../public/logo/recomtel.png";
 import { useAuth } from "@/store/AuthContext";
 
 const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+
+  const [isScrolled, setIsScrolled] = useState(false);
 
   const { user, logout, loading } = useAuth();
 
@@ -34,26 +35,61 @@ const Navbar = () => {
     { name: "Bantuan", href: "/bantuan" },
   ];
 
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 600);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const isSolid = isScrolled || isMobileMenuOpen;
+
+  const textColorClass = isSolid ? "text-gray-700" : "text-white";
+  const hoverColorClass = isSolid
+    ? "hover:text-amber-500"
+    : "hover:text-amber-300";
+  const buttonBorderClass = isSolid
+    ? "border-amber-500 text-black"
+    : "border-white text-white hover:bg-white hover:text-black";
+
   return (
-    <header className="fixed top-0 left-0 w-full bg-white shadow-sm z-50">
-      <nav className="container mx-auto px-4 h-20 flex justify-between items-center text-sm font-medium text-gray-700">
-        <Link href="/" className="flex items-center space-x-2 cursor-pointer">
+    <header
+      className={`
+        fixed top-0 left-0 w-full z-50 transition-all duration-300
+        /* 🟢 UPDATE 2: Padding Konsisten (py-4) agar tidak melompat */
+        py-4
+        ${
+          isSolid
+            ? "bg-white/95 backdrop-blur-sm shadow-md" 
+            : "bg-transparent" 
+        }
+      `}
+    >
+      <nav className="container mx-auto px-4 h-16 flex justify-between items-center text-sm font-medium">
+        <Link
+          href="/"
+          className="flex items-center space-x-2 cursor-pointer z-50"
+        >
           <Image
             src={LogoImage}
             alt="Recomtel Logo"
             width={100}
             className="h-auto"
+            style={{ filter: isSolid ? "none" : "brightness(0) invert(1)" }}
           />
         </Link>
 
-        {/* --- MENU DESKTOP --- */}
         <div className="hidden md:flex items-center space-x-6">
-          <div className="hidden text-black md:flex items-center space-x-6">
+          <div
+            className={`hidden md:flex items-center space-x-6 ${textColorClass}`}
+          >
             {navLinks.map((link) => (
               <Link
                 key={link.name}
                 href={link.href}
-                className="hover:text-amber-500 transition duration-150"
+                className={`${hoverColorClass} transition duration-150`}
               >
                 {link.name}
               </Link>
@@ -68,13 +104,18 @@ const Navbar = () => {
               </div>
             ) : user ? (
               <div className="relative">
+
                 <button
                   onClick={() => setIsProfileOpen(!isProfileOpen)}
-                  className={`flex items-center gap-2 hover:bg-gray-100 p-1 pr-3 rounded-full transition duration-150 ${
-                    isProfileOpen ? "bg-gray-100" : ""
-                  }`}
+                  className={`flex items-center gap-2 p-1 pr-3 rounded-full transition duration-150 
+                    ${isSolid ? "hover:bg-gray-100" : "hover:bg-white/20"}
+                  `}
                 >
-                  <div className="w-8 h-8 relative rounded-full overflow-hidden border border-gray-200">
+                  <div
+                    className={`w-8 h-8 relative rounded-full overflow-hidden border ${
+                      isSolid ? "border-gray-200" : "border-white/50"
+                    }`}
+                  >
                     <Image
                       src={profileImageSrc}
                       alt="User Avatar"
@@ -84,13 +125,13 @@ const Navbar = () => {
                     />
                   </div>
                   <FaChevronDown
-                    className={`text-xs text-gray-500 transition-transform duration-200 ${
-                      isProfileOpen ? "rotate-180" : ""
-                    }`}
+                    className={`text-xs transition-transform duration-200 
+                      ${isProfileOpen ? "rotate-180" : ""}
+                      ${textColorClass}
+                    `}
                   />
                 </button>
 
-                {/* Dropdown Desktop */}
                 <AnimatePresence>
                   {isProfileOpen && (
                     <motion.div
@@ -187,32 +228,36 @@ const Navbar = () => {
               </div>
             ) : (
               <>
-                <button className="border border-amber-500 text-black font-semibold py-1 px-3 rounded-full hover:bg-amber-500 transition duration-150">
+                <button
+                  className={`border font-semibold py-1 px-3 rounded-full transition duration-150 ${buttonBorderClass}`}
+                >
                   Dapatkan SIM Card
                 </button>
                 <Link
                   href="/login"
                   className="p-2 transition duration-150 cursor-pointer"
                 >
-                  <FaUser className="text-2xl hover:text-amber-500 transition duration-150 text-black" />
+                  <FaUser
+                    className={`text-2xl transition duration-150 ${textColorClass} ${hoverColorClass}`}
+                  />
                 </Link>
               </>
             )}
           </div>
         </div>
 
-        {/* HAMBURGER BUTTON */}
         <div className="md:hidden flex items-center">
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="text-2xl text-black z-50"
+            className={`text-2xl z-50 transition-colors duration-300 ${
+              isMobileMenuOpen ? "text-black" : textColorClass
+            }`}
           >
             {isMobileMenuOpen ? <FaTimes /> : <FaBars />}
           </button>
         </div>
       </nav>
 
-      {/* --- MOBILE DROPDOWN --- */}
       <AnimatePresence>
         {isMobileMenuOpen && (
           <motion.div
@@ -220,10 +265,10 @@ const Navbar = () => {
             animate={{ opacity: 1, height: "100vh" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="md:hidden absolute top-20 left-0 w-full bg-white shadow-xl z-40 overflow-hidden"
+            className="md:hidden absolute top-0 left-0 w-full bg-white shadow-xl z-40 overflow-hidden pt-20"
           >
             <div className="flex flex-col p-4 space-y-6 h-full overflow-y-auto pb-32">
-              {/* 1. PROFIL USER */}
+              {/* 1. PROFIL USER MOBILE */}
               <div className="pb-4 border-b border-gray-200">
                 {loading ? (
                   <div className="animate-pulse flex items-center gap-3 p-2">
@@ -252,7 +297,6 @@ const Navbar = () => {
                   )
                 )}
 
-                {/* 2. MENU NAVIGASI */}
                 <div className="flex flex-col space-y-1 mt-4">
                   {navLinks.map((link) => (
                     <Link
@@ -266,7 +310,6 @@ const Navbar = () => {
                 </div>
               </div>
 
-              {/* 3. TOMBOL-TOMBOL (Bawah) */}
               <div className="pt-6 flex flex-col space-y-3 mt-auto">
                 <button className="w-full border-2 border-amber-500 text-black font-bold py-3 px-4 rounded-full hover:bg-amber-500 hover:text-white transition">
                   Dapatkan SIM Card
