@@ -77,7 +77,7 @@ export default function BenefitsSection() {
           transition={{ delay: 0.6, duration: 0.5 }}
         >
           <Link
-            href="/register"
+            href="/login"
             className="text-amber-600 font-bold text-xl flex items-center justify-center group transition hover:text-amber-700"
           >
             Gabung Sekarang
