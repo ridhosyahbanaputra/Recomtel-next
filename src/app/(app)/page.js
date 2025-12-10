@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import HeroSection from "../components/home/HeroSection";
-import AiRecommend from "../components/home/AiRecommend";
+import AiRecommend from "../components/home/AICommand";
 import RecommendationSection from "../components/home/RecommendationSection";
 import BenefitsSection from "../components/home/BenefitsSection";
 

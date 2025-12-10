@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/store/AuthContext";
 import { apiGet } from "@/lib/helper";
 import { TARGET_OFFERS } from "@/lib/data";
@@ -19,7 +19,7 @@ const staggerContainer = {
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.5,
+      staggerChildren: 0.2,
     },
   },
 };
@@ -29,6 +29,7 @@ function PackageCard({ headerLines = [], mainLines, price }) {
     <motion.div
       whileHover={{
         y: -4,
+
         boxShadow: "0 18px 35px rgba(15, 23, 42, 0.12)",
       }}
       transition={{ duration: 0.2 }}
@@ -66,6 +67,7 @@ function PackageCard({ headerLines = [], mainLines, price }) {
         <p className="text-[11px] sm:text-sm font-semibold mb-2 text-orange-500">
           {price}
         </p>
+
         <button
           type="button"
           className="w-full rounded-full px-4 py-1.5 text-[11px] sm:text-xs font-semibold text-white transition-colors bg-rose-500 hover:bg-rose-600"
@@ -80,35 +82,37 @@ function PackageCard({ headerLines = [], mainLines, price }) {
 function PackageSection({ title, cards, isRecommendedSection, rank }) {
   return (
     <section
-      className={`rounded-3xl border px-3 py-4 md:px-5 md:py-5 transition-all duration-500 ${
+      className={`rounded-2xl border px-4 py-5 md:px-6 md:py-6 transition-all duration-500 ${
         isRecommendedSection
-          ? "border-amber-400 bg-amber-50/50 order-first"
-          : "border-gray-200 bg-white"
+          ? "border-amber-400 bg-amber-50/50"
+          : "border-gray-100 bg-gray-50/30"
       }`}
     >
-      <div className="flex flex-wrap items-center gap-2 mb-3 md:mb-4">
-        <h2 className="text-lg md:text-xl font-semibold text-gray-900">
-          {title}
-        </h2>
+      <div className="flex flex-wrap items-center gap-2 mb-4 md:mb-5">
+        <h2 className="text-lg md:text-xl font-bold text-gray-900">{title}</h2>
 
         {isRecommendedSection && (
           <>
-            <span className="bg-amber-500 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-sm">
+            <span className="bg-amber-500 text-white text-[10px] font-bold px-2 py-1 rounded-full  shadow-sm">
               TOP {rank}
             </span>
-            <span className="bg-amber-500 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-sm">
-              AI PICK
+            <span className="bg-amber-500 text-white text-[10px] font-bold px-2 py-1 rounded-full  shadow-sm">
+              AI PICK ⚡
             </span>
             <span className="bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-sm">
-              Rekomendasi AI
+              Rekomendasi Teratas
             </span>
           </>
         )}
       </div>
 
-      <div className="flex gap-3 md:gap-4 overflow-x-auto pb-1 scrollbar-hide">
+      <div className="flex gap-3 md:gap-4 overflow-x-auto pb-2 scrollbar-hide px-1">
         {cards.map((card, index) => (
-          <PackageCard key={`${title}-${index}`} {...card} />
+          <PackageCard
+            key={`${title}-${index}`}
+            {...card}
+            isRecommended={isRecommendedSection && index === 0}
+          />
         ))}
       </div>
     </section>
@@ -119,6 +123,8 @@ export default function RecommendationSection() {
   const { user, loading: authLoading } = useAuth();
   const [sections, setSections] = useState(TARGET_OFFERS);
   const [isDataReady, setIsDataReady] = useState(false);
+
+  const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
     if (authLoading) return;
@@ -174,32 +180,90 @@ export default function RecommendationSection() {
 
   if (authLoading || !isDataReady) {
     return (
-      <div className="space-y-6 md:space-y-8 animate-pulse">
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="h-48 bg-gray-200 rounded-3xl"></div>
-        ))}
+      <div className="bg-white rounded-[2.5rem] shadow-xl border border-gray-100 p-8">
+        <div className="space-y-8 animate-pulse">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-48 bg-gray-200 rounded-3xl"></div>
+          ))}
+        </div>
       </div>
     );
   }
 
+  const topSections = sections.slice(0, 3);
+  const hiddenSections = sections.slice(3);
+
   return (
     <motion.div
-      className="space-y-6 md:space-y-8"
+      className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 md:p-10 relative overflow-hidden"
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true, margin: "-100px" }}
       variants={staggerContainer}
     >
-      {sections.map((section) => (
-        <motion.div key={section.title} variants={fadeInUp}>
-          <PackageSection
-            title={section.title}
-            cards={section.cards}
-            isRecommendedSection={section.isRecommendedSection}
-            rank={section.rank}
-          />
-        </motion.div>
-      ))}
+      <div className="space-y-8 md:space-y-12">
+        {topSections.map((section) => (
+          <motion.div key={section.title} variants={fadeInUp}>
+            <PackageSection
+              title={section.title}
+              cards={section.cards}
+              isRecommendedSection={section.isRecommendedSection}
+              rank={section.rank}
+            />
+          </motion.div>
+        ))}
+
+        <AnimatePresence>
+          {showAll && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.5, ease: "easeInOut" }}
+              className="space-y-8 md:space-y-12 overflow-hidden"
+            >
+              {hiddenSections.map((section) => (
+                <motion.div
+                  key={section.title}
+                  variants={fadeInUp}
+                  initial="hidden"
+                  animate="visible"
+                >
+                  <PackageSection
+                    title={section.title}
+                    cards={section.cards}
+                    isRecommendedSection={section.isRecommendedSection}
+                    rank={section.rank}
+                  />
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {hiddenSections.length > 0 && (
+        <div className="flex justify-center pt-8 border-t border-gray-100 mt-8">
+          <button
+            onClick={() => setShowAll(!showAll)}
+            className="group flex flex-col items-center gap-1 text-gray-400 hover:text-amber-600 transition-colors duration-300 outline-none"
+          >
+            <span className="text-xl font-bold widest transition-all group-hover:[0.15rem]">
+              {showAll
+                ? "Tutup"
+                : `Lihat ${hiddenSections.length} Paket Lainnya`}
+            </span>
+
+            <span
+              className={`text-xl transition-transform duration-500 ${
+                showAll ? "rotate-180" : "group-hover:translate-y-1"
+              }`}
+            >
+              ▼
+            </span>
+          </button>
+        </div>
+      )}
     </motion.div>
   );
 }
