@@ -178,6 +178,7 @@ export default function AiRecommend() {
 
           <button
             type="submit"
+            aria-label="Submit"
             disabled={isThinking || (!aiQuery.trim() && !imageFile)}
             className={`p-2.5 rounded-full text-white transition transform active:scale-95 text-xl ${
               isThinking

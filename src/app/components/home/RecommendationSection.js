@@ -5,6 +5,25 @@ import { useAuth } from "@/store/AuthContext";
 import { apiGet } from "@/lib/helper";
 import { TARGET_OFFERS } from "@/lib/data";
 
+function ButtonCard({ paketName, harga, onClick, disabled = false }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={`Beli paket ${paketName} Rp. ${harga}`}
+      className={`
+        w-full rounded-full px-4 py-1.5 text-[11px] sm:text-xs font-semibold
+        text-white transition-colors
+        bg-rose-500 hover:bg-rose-600
+        disabled:bg-gray-400 disabled:cursor-not-allowed
+      `}
+    >
+      Beli
+    </button>
+  );
+}
+
 const fadeInUp = {
   hidden: { opacity: 0, y: 40 },
   visible: {
@@ -29,7 +48,6 @@ function PackageCard({ headerLines = [], mainLines, price }) {
     <motion.div
       whileHover={{
         y: -4,
-
         boxShadow: "0 18px 35px rgba(15, 23, 42, 0.12)",
       }}
       transition={{ duration: 0.2 }}
@@ -68,12 +86,11 @@ function PackageCard({ headerLines = [], mainLines, price }) {
           {price}
         </p>
 
-        <button
-          type="button"
-          className="w-full rounded-full px-4 py-1.5 text-[11px] sm:text-xs font-semibold text-white transition-colors bg-rose-500 hover:bg-rose-600"
-        >
-          Beli
-        </button>
+        <ButtonCard
+          paketName={mainLines?.[0] || "paket"}
+          harga={price}
+          onClick={() => alert(`Beli paket ${mainLines?.[0]} Rp. ${price}`)}
+        />
       </div>
     </motion.div>
   );
@@ -93,10 +110,10 @@ function PackageSection({ title, cards, isRecommendedSection, rank }) {
 
         {isRecommendedSection && (
           <>
-            <span className="bg-amber-500 text-white text-[10px] font-bold px-2 py-1 rounded-full  shadow-sm">
+            <span className="bg-amber-500 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-sm">
               TOP {rank}
             </span>
-            <span className="bg-amber-500 text-white text-[10px] font-bold px-2 py-1 rounded-full  shadow-sm">
+            <span className="bg-amber-500 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-sm">
               AI PICK ⚡
             </span>
             <span className="bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-sm">
