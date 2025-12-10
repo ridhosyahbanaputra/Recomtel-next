@@ -28,11 +28,11 @@ const Navbar = () => {
 
   const navLinks = [
     { name: "Beranda", href: "/" },
-    { name: "Promo", href: "/promo" },
-    { name: "Aktivasi SIM Card", href: "/aktivasi" },
-    { name: "Isi Ulang", href: "/isi-ulang" },
-    { name: "Blog", href: "/blog" },
-    { name: "Bantuan", href: "/bantuan" },
+    { name: "Promo", href: "/" },
+    { name: "Aktivasi SIM Card", href: "/" },
+    { name: "Isi Ulang", href: "/" },
+    { name: "Blog", href: "/" },
+    { name: "Bantuan", href: "/" },
   ];
 
   useEffect(() => {
@@ -60,11 +60,7 @@ const Navbar = () => {
         fixed top-0 left-0 w-full z-50 transition-all duration-300
         /* 🟢 UPDATE 2: Padding Konsisten (py-4) agar tidak melompat */
         py-4
-        ${
-          isSolid
-            ? "bg-white/95 backdrop-blur-sm shadow-md" 
-            : "bg-transparent" 
-        }
+        ${isSolid ? "bg-white/95 backdrop-blur-sm shadow-md" : "bg-transparent"}
       `}
     >
       <nav className="container mx-auto px-4 h-16 flex justify-between items-center text-sm font-medium">
@@ -104,7 +100,6 @@ const Navbar = () => {
               </div>
             ) : user ? (
               <div className="relative">
-
                 <button
                   onClick={() => setIsProfileOpen(!isProfileOpen)}
                   className={`flex items-center gap-2 p-1 pr-3 rounded-full transition duration-150 
