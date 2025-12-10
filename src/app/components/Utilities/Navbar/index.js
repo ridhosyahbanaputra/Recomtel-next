@@ -18,7 +18,6 @@ import { useAuth } from "@/store/AuthContext";
 const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-
   const [isScrolled, setIsScrolled] = useState(false);
 
   const { user, logout, loading } = useAuth();
@@ -28,11 +27,11 @@ const Navbar = () => {
 
   const navLinks = [
     { name: "Beranda", href: "/" },
-    { name: "Promo", href: "/" },
-    { name: "Aktivasi SIM Card", href: "/" },
-    { name: "Isi Ulang", href: "/" },
-    { name: "Blog", href: "/" },
-    { name: "Bantuan", href: "/" },
+    { name: "Promo", href: "#" },
+    { name: "Aktivasi SIM Card", href: "#" },
+    { name: "Isi Ulang", href: "#" },
+    { name: "Blog", href: "#" },
+    { name: "Bantuan", href: "#" },
   ];
 
   useEffect(() => {
@@ -45,7 +44,6 @@ const Navbar = () => {
   }, []);
 
   const isSolid = isScrolled || isMobileMenuOpen;
-
   const textColorClass = isSolid ? "text-gray-700" : "text-white";
   const hoverColorClass = isSolid
     ? "hover:text-amber-500"
@@ -54,12 +52,21 @@ const Navbar = () => {
     ? "border-amber-500 text-black"
     : "border-white text-white hover:bg-white hover:text-black";
 
+  const renderNavLink = (link) => (
+    <Link
+      key={link.name}
+      href={link.href === "#" ? "/" : link.href}
+      onClick={(e) => link.href === "#" && e.preventDefault()}
+      className={`${hoverColorClass} transition duration-150 cursor-pointer`}
+    >
+      {link.name}
+    </Link>
+  );
+
   return (
     <header
       className={`
-        fixed top-0 left-0 w-full z-50 transition-all duration-300
-        /* 🟢 UPDATE 2: Padding Konsisten (py-4) agar tidak melompat */
-        py-4
+        fixed top-0 left-0 w-full z-50 transition-all duration-300 py-4
         ${isSolid ? "bg-white/95 backdrop-blur-sm shadow-md" : "bg-transparent"}
       `}
     >
@@ -81,15 +88,7 @@ const Navbar = () => {
           <div
             className={`hidden md:flex items-center space-x-6 ${textColorClass}`}
           >
-            {navLinks.map((link) => (
-              <Link
-                key={link.name}
-                href={link.href}
-                className={`${hoverColorClass} transition duration-150`}
-              >
-                {link.name}
-              </Link>
-            ))}
+            {navLinks.map(renderNavLink)}
           </div>
 
           <div className="flex items-center space-x-4">
@@ -102,9 +101,9 @@ const Navbar = () => {
               <div className="relative">
                 <button
                   onClick={() => setIsProfileOpen(!isProfileOpen)}
-                  className={`flex items-center gap-2 p-1 pr-3 rounded-full transition duration-150 
-                    ${isSolid ? "hover:bg-gray-100" : "hover:bg-white/20"}
-                  `}
+                  className={`flex items-center gap-2 p-1 pr-3 rounded-full transition duration-150 ${
+                    isSolid ? "hover:bg-gray-100" : "hover:bg-white/20"
+                  }`}
                 >
                   <div
                     className={`w-8 h-8 relative rounded-full overflow-hidden border ${
@@ -120,10 +119,9 @@ const Navbar = () => {
                     />
                   </div>
                   <FaChevronDown
-                    className={`text-xs transition-transform duration-200 
-                      ${isProfileOpen ? "rotate-180" : ""}
-                      ${textColorClass}
-                    `}
+                    className={`text-xs transition-transform duration-200 ${
+                      isProfileOpen ? "rotate-180" : ""
+                    } ${textColorClass}`}
                   />
                 </button>
 
@@ -147,6 +145,7 @@ const Navbar = () => {
                           <FaTimes />
                         </button>
                       </div>
+
                       <div className="flex flex-col items-center justify-center py-4">
                         <div className="w-20 h-20 relative rounded-full overflow-hidden border-4 border-white shadow-sm mb-3">
                           <Image
@@ -168,6 +167,7 @@ const Navbar = () => {
                           Kelola Akun Anda
                         </Link>
                       </div>
+
                       <div className="bg-white rounded-xl overflow-hidden mt-2 shadow-sm">
                         <Link
                           href="/profile"
@@ -201,6 +201,7 @@ const Navbar = () => {
                           </span>
                         </button>
                       </div>
+
                       <div className="mt-4 text-center text-[10px] text-gray-500 flex justify-center gap-2">
                         <span className="hover:bg-gray-200 px-2 py-1 rounded cursor-pointer">
                           Kebijakan Privasi
@@ -263,7 +264,7 @@ const Navbar = () => {
             className="md:hidden absolute top-0 left-0 w-full bg-white shadow-xl z-40 overflow-hidden pt-20"
           >
             <div className="flex flex-col p-4 space-y-6 h-full overflow-y-auto pb-32">
-              {/* 1. PROFIL USER MOBILE */}
+              {/* MOBILE PROFILE */}
               <div className="pb-4 border-b border-gray-200">
                 {loading ? (
                   <div className="animate-pulse flex items-center gap-3 p-2">
@@ -293,15 +294,7 @@ const Navbar = () => {
                 )}
 
                 <div className="flex flex-col space-y-1 mt-4">
-                  {navLinks.map((link) => (
-                    <Link
-                      key={link.name}
-                      href={link.href}
-                      className="text-base font-medium text-gray-600 hover:text-amber-600 hover:bg-amber-50 transition duration-150 py-3 px-3 rounded-lg"
-                    >
-                      {link.name}
-                    </Link>
-                  ))}
+                  {navLinks.map(renderNavLink)}
                 </div>
               </div>
 
