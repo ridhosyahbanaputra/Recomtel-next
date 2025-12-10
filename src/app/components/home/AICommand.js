@@ -143,7 +143,7 @@ export default function AiRecommend() {
           aiResponse ? "mb-6" : "mb-10"
         }`}
       >
-        <div className="flex items-center w-full pr-3 pl-6 py-3 bg-gray-50 rounded-full shadow-[6px_6px_12px_#d0d0d0,-6px_-6px_12px_#ffffff] focus-within:shadow-[3px_3px_8px_#d0d0d0,-3px_-3px_8px_#ffffff] transition-all">
+        <div className="flex items-center w-full pr-4 pl-6 py-3 bg-gray-50 rounded-full shadow-[6px_6px_12px_#d0d0d0,-6px_-6px_12px_#ffffff] focus-within:shadow-[3px_3px_8px_#d0d0d0,-3px_-3px_8px_#ffffff] transition-all">
           <input
             type="file"
             ref={fileInputRef}
@@ -168,7 +168,9 @@ export default function AiRecommend() {
             type="text"
             value={aiQuery}
             onChange={(e) => setAiQuery(e.target.value)}
-            placeholder={imageFile ? "Tuliskan analisis (Opsional)" : "Recomtel AI"}
+            placeholder={
+              imageFile ? "Tuliskan analisis (Opsional)" : "Recomtel AI"
+            }
             className="grow bg-transparent outline-none text-gray-800 text-base"
           />
 
@@ -176,7 +178,7 @@ export default function AiRecommend() {
             type="submit"
             aria-label="Submit"
             disabled={isThinking || (!aiQuery.trim() && !imageFile)}
-            className={`ml-3 p-2.5 rounded-full text-white transition transform text-xl shrink-0 ${
+            className={`p-2.5 rounded-full text-white transition transform text-xl shrink-0 ${
               isThinking
                 ? "bg-gray-400"
                 : "bg-amber-600 hover:bg-amber-700 shadow-lg shadow-amber-500/50"
