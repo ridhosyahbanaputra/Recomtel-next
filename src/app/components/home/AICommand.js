@@ -180,7 +180,7 @@ export default function AiRecommend() {
             type="submit"
             aria-label="Submit"
             disabled={isThinking || (!aiQuery.trim() && !imageFile)}
-            className={`p-2.5 rounded-full text-white transition transform active:scale-95 text-xl ${
+            className={`ml-3 p-2.5 rounded-full text-white transition transform text-xl shrink-0 ${
               isThinking
                 ? "bg-gray-400"
                 : "bg-amber-600 hover:bg-amber-700 shadow-lg shadow-amber-500/50"
