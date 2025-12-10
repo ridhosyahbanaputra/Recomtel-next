@@ -168,11 +168,7 @@ export default function AiRecommend() {
             type="text"
             value={aiQuery}
             onChange={(e) => setAiQuery(e.target.value)}
-            placeholder={
-              imageFile
-                ? "Tuliskan fokus analisis (Opsional)"
-                : "Contoh: 'Paket apa yang cocok untuk nonton?'"
-            }
+            placeholder={imageFile ? "Tuliskan analisis (Opsional)" : "Recomtel AI"}
             className="grow bg-transparent outline-none text-gray-800 text-base"
           />
 
