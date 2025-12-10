@@ -1,8 +1,16 @@
 import { NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { getSupabase } from "@/lib/supabase";
 
 export async function POST(request) {
   try {
+    const supabase = getSupabase();
+    if (!supabase) {
+      return NextResponse.json(
+        { message: "Konfigurasi server Supabase error" },
+        { status: 500 }
+      );
+    }
+
     const { nama, email, password } = await request.json();
 
     if (!nama || !email || !password) {
@@ -16,7 +24,7 @@ export async function POST(request) {
       email,
       password,
       options: {
-        data: { nama }, // masuk ke user_metadata
+        data: { nama },
       },
     });
 
