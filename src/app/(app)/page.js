@@ -12,16 +12,16 @@ export default function HomePage() {
       <HeroSection />
       {/* AI commands */}
       <section className="pt-15 pb-10 bg-white">
-        <div className="container mx-auto px-4">
+        <div className="w-full max-w-full mx-auto px-4 overflow-x-hidden">
           <h1 className="text-center text-3xl font-bold text-gray-800 mb-10">
             Bingung pilih paket, tanya aja kesini
           </h1>
           <AiRecommend />
         </div>
       </section>
-      {/* Recommendation Section */}
+      {/* Recommend Section */}
       <section className="pt-15 pb-10 bg-white">
-        <div className="container mx-auto px-4">
+        <div className="w-full max-w-full mx-auto px-4 overflow-x-hidden">
           <h1 className="text-center text-3xl font-bold text-gray-800 mb-10">
             Rekomendasi Paket Untuk Kamu
           </h1>

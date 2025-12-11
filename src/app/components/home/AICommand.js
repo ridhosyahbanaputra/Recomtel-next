@@ -136,14 +136,14 @@ export default function AiRecommend() {
   };
 
   return (
-    <div className="mb-10 mt-5 flex flex-col items-center px-4">
+    <div className="mb-10 mt-5 flex flex-col items-center px-4 w-full">
       <form
         onSubmit={handleAiSubmit}
-        className={`relative w-full max-w-3xl transition-all duration-300 ${
+        className={`relative w-full max-w-3xl overflow-x-hidden transition-all duration-300 ${
           aiResponse ? "mb-6" : "mb-10"
         }`}
       >
-        <div className="flex items-center w-full pr-4 pl-6 py-3 bg-gray-50 rounded-full shadow-[6px_6px_12px_#d0d0d0,-6px_-6px_12px_#ffffff] focus-within:shadow-[3px_3px_8px_#d0d0d0,-3px_-3px_8px_#ffffff] transition-all">
+        <div className="flex items-center w-full px-4 py-3 bg-amber-400 rounded-full shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all overflow-hidden">
           <input
             type="file"
             ref={fileInputRef}
@@ -151,13 +151,12 @@ export default function AiRecommend() {
             onChange={handleFileChange}
             className="hidden"
           />
+
           <button
             type="button"
             onClick={() => fileInputRef.current.click()}
-            className={`mr-3 text-2xl transition hover:scale-110 ${
-              imageFile
-                ? "text-green-500"
-                : "text-gray-500 hover:text-amber-600"
+            className={`mr-3 text-2xl transition hover:scale-110 shrink-0 ${
+              imageFile ? "text-green-700" : "text-black hover:text-yellow-200"
             }`}
             title="Upload Image Pemakaian Kuota"
           >
@@ -178,10 +177,10 @@ export default function AiRecommend() {
             type="submit"
             aria-label="Submit"
             disabled={isThinking || (!aiQuery.trim() && !imageFile)}
-            className={`p-2.5 rounded-full text-white transition transform text-xl shrink-0 ${
+            className={`p-2.5 rounded-full text-black transition transform text-xl shrink-0 min-w-[42px] ${
               isThinking
-                ? "bg-gray-400"
-                : "bg-amber-600 hover:bg-amber-700 shadow-lg shadow-amber-500/50"
+                ? "bg-gray-500"
+                : "bg-amber-300 hover:bg-yellow-300 shadow-2xl shadow-amber-500/50"
             }`}
           >
             <FiSend />
@@ -192,10 +191,10 @@ export default function AiRecommend() {
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mt-4 p-3 bg-white rounded-xl border border-gray-300 flex items-center gap-3 w-full"
+            className="mt-4 p-3 bg-white rounded-xl border border-gray-300 flex items-center gap-3 w-full overflow-hidden"
           >
             <div
-              className="w-16 h-16 bg-cover bg-center rounded-md relative"
+              className="w-16 h-16 bg-cover bg-center rounded-md relative shrink-0"
               style={{ backgroundImage: `url(${imagePreview})` }}
             >
               <button
@@ -206,7 +205,9 @@ export default function AiRecommend() {
                 <FiX />
               </button>
             </div>
-            <p className="text-sm text-gray-600">Image {imageFile.name}</p>
+            <p className="text-sm text-gray-600 truncate">
+              Image {imageFile.name}
+            </p>
           </motion.div>
         )}
       </form>

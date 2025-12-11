@@ -4,10 +4,10 @@ import { AuthProvider } from "@/store/AuthContext";
 
 export default function AppLayout({ children }) {
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen overflow-x-hidden">
       <AuthProvider>
         <Navbar />
-        <main>{children}</main>
+        <main className="w-full max-w-full overflow-x-hidden">{children}</main>
         <Footer />
       </AuthProvider>
     </div>
