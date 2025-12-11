@@ -167,17 +167,15 @@ export default function AiRecommend() {
             type="text"
             value={aiQuery}
             onChange={(e) => setAiQuery(e.target.value)}
-            placeholder={
-              imageFile ? "Tuliskan analisis (Opsional)" : "Recomtel AI"
-            }
-            className="grow bg-transparent outline-none text-gray-800 text-base"
+            placeholder={imageFile ? "(Optional)" : "Recomtel AI"}
+            className="bg-transparent outline-none text-gray-800 text-base flex-1 min-w-0"
           />
 
           <button
             type="submit"
             aria-label="Submit"
             disabled={isThinking || (!aiQuery.trim() && !imageFile)}
-            className={`p-2.5 rounded-full text-black transition transform text-xl shrink-0 min-w-[42px] ${
+            className={`p-2.5 rounded-full text-black transition transform text-xl  ${
               isThinking
                 ? "bg-gray-500"
                 : "bg-amber-300 hover:bg-yellow-300 shadow-2xl shadow-amber-500/50"
