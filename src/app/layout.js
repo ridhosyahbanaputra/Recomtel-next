@@ -9,7 +9,7 @@ const poppins = Poppins({
 });
 export const metadata = {
   title: "Recomtel",
-  description: "Sebuah Website Reckomendasi Kuota Internet",
+  description: "Website Yang Dapat Merekomendasikan Kuota Internet Berbasis AI",
 };
 export const viewport = {
   width: "device-width",
